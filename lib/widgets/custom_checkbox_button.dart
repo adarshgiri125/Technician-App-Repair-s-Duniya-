@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
+import 'package:partnersapp/core/app_export.dart';
 
 class CustomCheckboxButton extends StatelessWidget {
   CustomCheckboxButton({

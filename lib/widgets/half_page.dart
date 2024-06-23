@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/help_support.dart';
-import 'package:technician_app/presentation/my_bookings/my_bookings_screen.dart';
-import 'package:technician_app/presentation/technician_home_screen/technician_home_screen.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/help_support.dart';
+import 'package:partnersapp/presentation/my_bookings/my_bookings_screen.dart';
+import 'package:partnersapp/presentation/technician_home_screen/technician_home_screen.dart';
 
 class HalfPage extends StatelessWidget {
   final VoidCallback onClose;

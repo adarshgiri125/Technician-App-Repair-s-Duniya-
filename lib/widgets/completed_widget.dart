@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
+import 'package:partnersapp/core/app_export.dart';
 
 // ignore: must_be_immutable
 class CompletedWidget extends StatelessWidget {
@@ -11,6 +11,8 @@ class CompletedWidget extends StatelessWidget {
     required this.timing,
     required this.serviceName,
     required this.date,
+    required this.customerName,
+    required this.subCategory,
   });
   final String phone;
   final String timing;
@@ -18,6 +20,8 @@ class CompletedWidget extends StatelessWidget {
   final String serviceName;
   final String address;
   final String date;
+  final String customerName;
+  final String subCategory;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +54,7 @@ class CompletedWidget extends StatelessWidget {
                       bottom: 4.v,
                     ),
                     child: Text(
-                      phone,
+                      "+91**********",
                       style: TextStyle(
                         color: appTheme.blueGray700,
                         fontSize: 13.740318298339844.fSize,
@@ -60,6 +64,26 @@ class CompletedWidget extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+              SizedBox(height: 8.v),
+              Text(
+                "Name : ${customerName}",
+                style: TextStyle(
+                  color: appTheme.blueGray700,
+                  fontSize: 13.740318298339844.fSize,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 12.v),
+              Text(
+                "Issue : $subCategory",
+                style: TextStyle(
+                  color: appTheme.blueGray700,
+                  fontSize: 13.740318298339844.fSize,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               SizedBox(height: 12.v),
               Row(

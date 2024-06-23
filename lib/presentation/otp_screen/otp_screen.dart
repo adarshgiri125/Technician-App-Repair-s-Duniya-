@@ -2,13 +2,13 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/confirm_location_screen/confirm_location_screen.dart';
-import 'package:technician_app/presentation/id_verification_screen/id_verification_screen.dart';
-import 'package:technician_app/presentation/service_selection_screen/service_selection_screen.dart';
-import 'package:technician_app/presentation/technician_home_screen/technician_home_screen.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
-import 'package:technician_app/widgets/custom_pin_code_text_field.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/confirm_location_screen/confirm_location_screen.dart';
+import 'package:partnersapp/presentation/id_verification_screen/id_verification_screen.dart';
+import 'package:partnersapp/presentation/service_selection_screen/service_selection_screen.dart';
+import 'package:partnersapp/presentation/technician_home_screen/technician_home_screen.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/widgets/custom_pin_code_text_field.dart';
 
 // ignore: must_be_immutable
 class OtpScreen extends StatefulWidget {

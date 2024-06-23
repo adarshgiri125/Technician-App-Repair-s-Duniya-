@@ -1,9 +1,9 @@
-export 'package:technician_app/core/constants/constants.dart';
-export 'package:technician_app/core/utils/image_constant.dart';
-export 'package:technician_app/core/utils/size_utils.dart';
-export 'package:technician_app/theme/app_decoration.dart';
-export 'package:technician_app/theme/custom_text_style.dart';
-export 'package:technician_app/theme/theme_helper.dart';
-export 'package:technician_app/widgets/custom_image_view.dart';
+export 'package:partnersapp/core/constants/constants.dart';
+export 'package:partnersapp/core/utils/image_constant.dart';
+export 'package:partnersapp/core/utils/size_utils.dart';
+export 'package:partnersapp/theme/app_decoration.dart';
+export 'package:partnersapp/theme/custom_text_style.dart';
+export 'package:partnersapp/theme/theme_helper.dart';
+export 'package:partnersapp/widgets/custom_image_view.dart';
 export '../theme/custom_button_style.dart';
-export 'package:technician_app/core/utils/date_time_utils.dart';
+export 'package:partnersapp/core/utils/date_time_utils.dart';

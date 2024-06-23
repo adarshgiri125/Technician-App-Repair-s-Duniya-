@@ -10,11 +10,11 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/id_verification_screen/id_verification_screen.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
-import 'package:technician_app/widgets/custom_outlined_button.dart';
-import 'package:technician_app/widgets/custom_text_form_field.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/id_verification_screen/id_verification_screen.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/widgets/custom_outlined_button.dart';
+import 'package:partnersapp/widgets/custom_text_form_field.dart';
 import 'package:uuid/uuid.dart';
 import 'package:location/location.dart' as loc;
 import 'package:permission_handler/permission_handler.dart' as handler;
@@ -28,18 +28,44 @@ class ConfirmLocationScreen extends StatefulWidget {
 }
 
 class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
+  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   Completer<GoogleMapController> _mapController =
       Completer<GoogleMapController>();
   final List<String> codes = [
+    // kadapa
     '516001',
     '516002',
     '516003',
     '516004',
+
+    //Banglore
     '560076',
     '560102',
     '560068',
+    '560066',
+    '560100',
+
+    //Delhi
+    '110030',
+    '110029',
+    '110052',
+    '110070',
+    '110020',
+
+    //Hyderabad
+    '500033',
+    '500004',
+    '500035',
+    '500002',
+
+    //Mumbai
+    '400054',
+    '400053',
+    '400058',
+    '400069',
   ];
-  LatLng _currentPosition = LatLng(14.4673, 78.8242);
+
+  LatLng _initialCameraPosition = LatLng(12.9716, 77.5946);
   String _postalCode = '';
   String _currentAddress = '';
   TextEditingController _controller = TextEditingController();
@@ -52,24 +78,35 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
   loc.PermissionStatus _permission = loc.PermissionStatus.denied;
 
   Future<void> getUserLocation() async {
-    Position _position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    List<Placemark> placemarks =
-        await placemarkFromCoordinates(_position.latitude, _position.longitude);
-    Placemark place = placemarks[0];
+    try {
+      Position _position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
 
-    setState(() {
-      _currentPosition = LatLng(_position.latitude, _position.longitude);
-      _currentAddress =
-          '${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
-      _postalCode = place.postalCode!;
-    });
+      final GoogleMapController controller = await _mapController.future;
+      controller.animateCamera(CameraUpdate.newLatLng(
+          LatLng(_position.latitude, _position.longitude)));
 
-    final GoogleMapController controller = await _mapController.future;
-    controller.animateCamera(CameraUpdate.newLatLngZoom(
-      LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-      13,
-    ));
+      await _updateMarkerPosition(
+          LatLng(_position.latitude, _position.longitude));
+
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        _position.latitude,
+        _position.longitude,
+      );
+      Placemark place = placemarks.isNotEmpty ? placemarks[0] : Placemark();
+
+      setState(() {
+        _initialCameraPosition =
+            LatLng(_position.latitude, _position.longitude);
+        _currentAddress =
+            '${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
+        _postalCode = place.postalCode!;
+      });
+    } catch (e) {
+      log('Error getting user location: $e');
+      // Handle error gracefully
+    }
   }
 
   Future<void> checkPermissions() async {
@@ -77,14 +114,15 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
 
     if (status == PermissionStatus.denied) {
       // Location permission is denied, show a dialog with an option to open app settings
-      showLocationPermissionDialog(context);
+      await Permission.location.request();
     } else if (status == PermissionStatus.granted) {
       // User has granted location permission, proceed to get the current location
       await getUserLocation();
       return;
     } else {
       // User has not yet been asked for permission, request it
-      await Permission.location.request();
+      showLocationPermissionDialog(context);
+
       getUserLocation();
     }
   }
@@ -163,8 +201,8 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
           .collection('location')
           .doc('homeLocation')
           .set({
-        'latitude': _currentPosition!.latitude,
-        'longitude': _currentPosition!.longitude
+        'latitude': _initialCameraPosition!.latitude,
+        'longitude': _initialCameraPosition!.longitude
       }, SetOptions(merge: true));
 
       Navigator.push(
@@ -179,7 +217,7 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
   Future<void> _updateMarkerPosition(LatLng newPosition) async {
     try {
       setState(() {
-        _currentPosition = newPosition;
+        _initialCameraPosition = newPosition;
       });
 
       List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -189,7 +227,7 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
 
       Placemark place = placemarks[0];
 
-      final GoogleMapController controller = await _mapController.future;
+      // final GoogleMapController controller = await _mapController.future;
 
       setState(() {
         _currentAddress =
@@ -202,22 +240,38 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
   }
 
   Future<void> _updateCameraPosition(GoogleMapController controller) async {
-    LatLngBounds visibleRegion = await controller.getVisibleRegion();
-    LatLng center = LatLng(
-      (visibleRegion.southwest.latitude + visibleRegion.northeast.latitude) / 2,
-      (visibleRegion.southwest.longitude + visibleRegion.northeast.longitude) /
-          2,
-    );
+    try {
+      LatLngBounds? visibleRegion = await controller.getVisibleRegion();
+      if (visibleRegion != null) {
+        LatLng center = LatLng(
+          (visibleRegion.southwest.latitude +
+                  visibleRegion.northeast.latitude) /
+              2,
+          (visibleRegion.southwest.longitude +
+                  visibleRegion.northeast.longitude) /
+              2,
+        );
 
-    setState(() {
-      _currentPosition = center;
-    });
-    await _updateMarkerPosition(center);
+        setState(() {
+          _initialCameraPosition = center;
+        });
+        await _updateMarkerPosition(center);
+      } else {
+        // Handle case when visibleRegion is null
+        print("Visible region is null");
+      }
+    } catch (e) {
+      // Handle any errors that occur during the process
+      print("Error updating camera position: $e");
+    }
   }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      showLocationDataCollectionDialog(context);
+    });
     _auth.authStateChanges().listen((User? user) {
       setState(() {
         _user = user;
@@ -227,6 +281,34 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
     _controller.addListener(() {
       onChange();
     });
+  }
+
+  void showLocationDataCollectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Location Data Collection"),
+          content: Text(
+            "Repairs Duniya Partners collects location data to provide fast service to users by connecting them with new customers nearby.",
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: Text(
+                "OK",
+                style: TextStyle(
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -245,11 +327,11 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
                       alignment: Alignment.bottomCenter,
                       children: [
                         GoogleMap(
+                          mapType: MapType.normal,
                           initialCameraPosition: CameraPosition(
-                            target: _currentPosition,
-                            zoom: 13,
+                            target: _initialCameraPosition,
+                            zoom: 15.0,
                           ),
-                          zoomControlsEnabled: false,
                           onMapCreated: (GoogleMapController controller) {
                             _mapController.complete(controller);
                             _updateCameraPosition(controller);
@@ -258,7 +340,7 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
                             Marker(
                               markerId: const MarkerId('currentLocation'),
                               icon: BitmapDescriptor.defaultMarker,
-                              position: _currentPosition!,
+                              position: _initialCameraPosition!,
                               draggable: true,
                               onDragEnd: (LatLng newPosition) {
                                 _updateMarkerPosition(newPosition);
@@ -267,7 +349,7 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
                           },
                           onCameraMove: (CameraPosition position) {
                             setState(() {
-                              _currentPosition = position.target;
+                              _initialCameraPosition = position.target;
                             });
                           },
                           onCameraIdle: () async {
@@ -318,14 +400,14 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
 
                           final GoogleMapController controller =
                               await _mapController.future;
-                          double zoomLevel = 13;
+                          double zoomLevel = 15;
                           controller.animateCamera(CameraUpdate.newLatLngZoom(
                             LatLng(latLng.latitude, latLng.longitude),
                             zoomLevel,
                           ));
 
                           setState(() {
-                            _currentPosition = latLng;
+                            _initialCameraPosition = latLng;
                             _currentAddress =
                                 '${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
                             _postalCode = place.postalCode!;
@@ -348,20 +430,32 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
   /// Section Widget
   Widget _buildUseMyCurrentLocation(BuildContext context) {
     return CustomOutlinedButton(
-        text: "Use my Current Location",
-        leftIcon: Container(
-          margin: EdgeInsets.only(right: 8.h),
-          child: CustomImageView(
-            imagePath: ImageConstant.imgVector,
-            height: 22.v,
-            width: 20.h,
-          ),
+      text: "Use my Current Location",
+      leftIcon: Container(
+        margin: EdgeInsets.only(right: 8.h),
+        child: CustomImageView(
+          imagePath: ImageConstant.imgVector,
+          height: 22.v,
+          width: 20.h,
         ),
-        textStyle: TextStyle(color: Colors.black, fontSize: 17.v),
-        onPressed: () async {
-          await checkPermissions();
-          getUserLocation();
-        });
+      ),
+      textStyle: TextStyle(color: Colors.black, fontSize: 17.v),
+      onPressed: () async {
+        // Check if the user has granted location permission
+        var status = await Permission.location.status;
+
+        if (status == PermissionStatus.granted) {
+          // User has granted location permission, proceed to get the current location
+          await getUserLocation();
+        } else if (status == PermissionStatus.denied) {
+          // Location permission is denied, show a dialog with an option to open app settings
+          showLocationPermissionDialog(context);
+        } else {
+          // User has not yet been asked for permission, request it
+          await Permission.location.request();
+        }
+      },
+    );
   }
 
   Widget _buildPickALocationFrame(BuildContext context) {

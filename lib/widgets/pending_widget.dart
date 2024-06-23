@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/my_bookings/end_selfie_screen.dart';
-import 'package:technician_app/presentation/my_bookings/start_selfie_screen.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/chargeCollection/charges.dart';
+import 'package:partnersapp/presentation/my_bookings/end_selfie_screen.dart';
+import 'package:partnersapp/presentation/my_bookings/start_selfie_screen.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // ignore: must_be_immutable
@@ -19,6 +20,8 @@ class PendingWidget extends StatefulWidget {
     required this.serviceName,
     required this.timing,
     required this.date,
+    required this.customerName,
+    required this.subCategory,
   });
 
   final String id;
@@ -29,6 +32,8 @@ class PendingWidget extends StatefulWidget {
   final String address;
   final String date;
   final String docName;
+  final String customerName;
+  final String subCategory;
 
   @override
   State<PendingWidget> createState() => _PendingWidgetState();
@@ -85,7 +90,7 @@ class _PendingWidgetState extends State<PendingWidget> {
                             bottom: 4.v,
                           ),
                           child: Text(
-                            widget.phone,
+                            "+91**********",
                             style: TextStyle(
                               color: appTheme.blueGray700,
                               fontSize: 13.740318298339844.fSize,
@@ -97,6 +102,26 @@ class _PendingWidgetState extends State<PendingWidget> {
                       ],
                     ),
                     SizedBox(height: 12.v),
+                    Text(
+                      "Name : ${widget.customerName}",
+                      style: TextStyle(
+                        color: appTheme.blueGray700,
+                        fontSize: 13.740318298339844.fSize,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 12.v),
+                    Text(
+                      "Issue : ${widget.subCategory}",
+                      style: TextStyle(
+                        color: appTheme.blueGray700,
+                        fontSize: 13.740318298339844.fSize,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 10.v),
                     Row(
                       children: [
                         CustomImageView(
@@ -278,9 +303,11 @@ class _PendingWidgetState extends State<PendingWidget> {
                       height: 49.v,
                       width: 157.h,
                       text: "Start",
-                      buttonStyle: CustomButtonStyles.none,
+                      buttonStyle: ButtonStyle(
+                          backgroundColor:
+                              MaterialStatePropertyAll(Colors.orange.shade600)),
                       decoration: CustomButtonStyles
-                          .gradientLightGreenAToLightGreenADecoration,
+                          .gradientPrimaryToOnPrimaryDecoration,
                       alignment: Alignment.bottomRight,
                     ),
                   ],
@@ -304,7 +331,7 @@ class _PendingWidgetState extends State<PendingWidget> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => EndSelfieScreen(
+                                builder: (context) => ChargeAmountScreen(
                                       docName: widget.docName,
                                     )));
                       },

@@ -5,12 +5,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:technician_app/firebase_options.dart';
-import 'package:technician_app/notification.dart';
-import 'package:technician_app/presentation/login_screen/login_screen.dart';
-import 'package:technician_app/presentation/technician_home_screen/notifications_display.dart';
-import 'package:technician_app/presentation/technician_home_screen/technician_home_screen.dart';
-import 'package:technician_app/theme/theme_helper.dart';
+import 'package:partnersapp/firebase_options.dart';
+import 'package:partnersapp/notification.dart';
+import 'package:partnersapp/presentation/login_screen/login_screen.dart';
+import 'package:partnersapp/presentation/technician_home_screen/notifications_display.dart';
+import 'package:partnersapp/presentation/technician_home_screen/technician_home_screen.dart';
+import 'package:partnersapp/theme/theme_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity/connectivity.dart';
 

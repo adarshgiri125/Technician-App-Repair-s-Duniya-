@@ -1,4 +1,4 @@
-package com.repairsduniya.technician_app
+package com.repairsduniya.partnersapp
 
 import io.flutter.embedding.android.FlutterActivity
 

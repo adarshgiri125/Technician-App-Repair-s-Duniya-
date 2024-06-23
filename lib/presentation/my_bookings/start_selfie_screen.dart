@@ -7,9 +7,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/my_bookings/my_bookings_screen.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/my_bookings/my_bookings_screen.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
 
 class StartSelfieScreen extends StatefulWidget {
   const StartSelfieScreen({super.key, required this.docName});
@@ -77,65 +77,78 @@ class _StartSelfieScreenState extends State<StartSelfieScreen> {
   //   }
   // }
 
- Future<void> _uploadFile(File path) async {
-  try {
-    setState(() {
-      isUploading = true;
-    });
-    File pickedFile = path;
+  Future<void> _uploadFile(File path, BuildContext context) async {
+    try {
+      if (context == null) {
+        print("Context is null!");
+        return;
+      }
+      setState(() {
+        isUploading = true;
+      });
+      File pickedFile = path;
 
-    // Fetching serviceID and userID from the Firestore document
-    DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
-        .collection('technicians')
-        .doc(_user!.uid)
-        .collection('serviceList')
-        .doc(widget.docName)
-        .get();
+      // Fetching serviceID and userID from the Firestore document
+      DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
+          .collection('technicians')
+          .doc(_user!.uid)
+          .collection('serviceList')
+          .doc(widget.docName)
+          .get();
 
-    String serviceID = documentSnapshot.get('serviceId');
-    String userID = documentSnapshot.get('customerId');
+      String serviceID = documentSnapshot.get('serviceId');
+      String userID = documentSnapshot.get('customerId');
 
-    final Reference storageReference = _storage
-        .ref()
-        .child('uploads/${_user!.uid}/${widget.docName}_startingSelfie');
-    final TaskSnapshot snapshot = await storageReference.putFile(pickedFile);
-    String downloadUrl = await snapshot.ref.getDownloadURL();
+      final Reference storageReference = _storage
+          .ref()
+          .child('uploads/${_user!.uid}/${widget.docName}_startingSelfie');
+      final TaskSnapshot snapshot = await storageReference.putFile(pickedFile);
+      String downloadUrl = await snapshot.ref.getDownloadURL();
 
-    // Update startingSelfie and status in technician's serviceList
-    await _firestore
-        .collection('technicians')
-        .doc(_user!.uid)
-        .collection('serviceList')
-        .doc(widget.docName)
-        .set({'startingSelfie': downloadUrl}, SetOptions(merge: true));
+      // Update startingSelfie and status in technician's serviceList
+      await _firestore
+          .collection('technicians')
+          .doc(_user!.uid)
+          .collection('serviceList')
+          .doc(widget.docName)
+          .set({'startingSelfie': downloadUrl}, SetOptions(merge: true));
 
-    await _firestore
-        .collection('technicians')
-        .doc(_user!.uid)
-        .collection('serviceList')
-        .doc(widget.docName)
-        .update({'status': 's', 'jobAcceptance': true});
+      await _firestore
+          .collection('technicians')
+          .doc(_user!.uid)
+          .collection('serviceList')
+          .doc(widget.docName)
+          .update({
+        'status': 's',
+        'jobAcceptance': true,
+        'workStatus': 'Started Working'
+      });
 
-    // Update workingStatus in customer's service document
-    await _firestore
-        .collection('customers')
-        .doc(userID)
-        .collection('serviceList')
-        .doc(serviceID)
-        .set({'workStatus': 'Started Working'}, SetOptions(merge: true));
+      // Update workingStatus in customer's service document
+      if (userID != null &&
+          userID.isNotEmpty &&
+          serviceID != null &&
+          serviceID.isNotEmpty) {
+        await _firestore
+            .collection('customers')
+            .doc(userID)
+            .collection('serviceDetails')
+            .doc(serviceID)
+            .set({'workStatus': 'Started Working'}, SetOptions(merge: true));
+      }
 
-    Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => MyBookingsScreen(id: 's')),
-        (route) => false);
-  } catch (e) {
-    log(e.toString());
-  } finally {
-    setState(() {
-      isUploading = false;
-    });
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => MyBookingsScreen(id: 'p')),
+          (route) => false);
+    } catch (e) {
+      log(e.toString());
+    } finally {
+      setState(() {
+        isUploading = false;
+      });
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +231,7 @@ class _StartSelfieScreenState extends State<StartSelfieScreen> {
                                       MaterialStatePropertyAll(Colors.black)),
                               text: "Verify",
                               onPressed: () {
-                                _uploadFile(imageSelfiePath!);
+                                _uploadFile(imageSelfiePath!, context);
                               },
                             ),
                           )

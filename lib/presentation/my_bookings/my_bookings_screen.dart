@@ -3,16 +3,16 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/technician_home_screen/notifications_display.dart';
-import 'package:technician_app/presentation/technician_home_screen/profile_screen.dart';
-import 'package:technician_app/presentation/technician_home_screen/technician_home_screen.dart';
-import 'package:technician_app/widgets/app_bar/appbar_title.dart';
-import 'package:technician_app/widgets/app_bar/appbar_trailing_image.dart';
-import 'package:technician_app/widgets/completed_widget.dart';
-import 'package:technician_app/widgets/decline_widget.dart';
-import 'package:technician_app/widgets/half_page.dart';
-import 'package:technician_app/widgets/pending_widget.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/technician_home_screen/notifications_display.dart';
+import 'package:partnersapp/presentation/technician_home_screen/profile_screen.dart';
+import 'package:partnersapp/presentation/technician_home_screen/technician_home_screen.dart';
+import 'package:partnersapp/widgets/app_bar/appbar_title.dart';
+import 'package:partnersapp/widgets/app_bar/appbar_trailing_image.dart';
+import 'package:partnersapp/widgets/completed_widget.dart';
+import 'package:partnersapp/widgets/decline_widget.dart';
+import 'package:partnersapp/widgets/half_page.dart';
+import 'package:partnersapp/widgets/pending_widget.dart';
 
 class MyBookingsScreen extends StatefulWidget {
   MyBookingsScreen({super.key, required this.id});
@@ -68,6 +68,25 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             Timestamp timeStamp = documentSnapshot['date'];
             DateTime datetime = timeStamp.toDate();
             String date = '${datetime.day}/${datetime.month}/${datetime.year}';
+            String customerName =
+                "not-mentioned"; // Default value if customerName field doesn't exist in the document
+
+            var data =
+                documentSnapshot.data(); // Retrieve data from the document
+            if (data != null &&
+                data is Map<String, dynamic> &&
+                data.containsKey('customerName')) {
+              customerName = documentSnapshot[
+                  'customerName']; // Assign the value of customerName if it exists
+            }
+            String subCategory = "not-mentioned";
+            if (data != null &&
+                data is Map<String, dynamic> &&
+                data.containsKey('subCategory')) {
+              subCategory = documentSnapshot[
+                  'subCategory']; // Assign the value of customerName if it exists
+            }
+
             pending.add(
               PendingWidget(
                 serviceName: documentSnapshot['serviceName'],
@@ -80,6 +99,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 address: documentSnapshot['customerAddress'],
                 location: documentSnapshot['customerLocation'],
                 date: date,
+                customerName: customerName,
+                subCategory: subCategory,
               ),
             );
           } else if (documentSnapshot['status'] == 'c') {
@@ -88,6 +109,24 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             String time =
                 '${dateTime.hour}:${dateTime.minute}:${dateTime.second}';
             String date = '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+            String customerName =
+                "not-mentioned"; // Default value if customerName field doesn't exist in the document
+
+            var data =
+                documentSnapshot.data(); // Retrieve data from the document
+            if (data != null &&
+                data is Map<String, dynamic> &&
+                data.containsKey('customerName')) {
+              customerName = data[
+                  'customerName']; // Assign the value of customerName if it exists
+            }
+            String subCategory = "not-mentioned";
+            if (data != null &&
+                data is Map<String, dynamic> &&
+                data.containsKey('subCategory')) {
+              subCategory = data[
+                  'subCategory']; // Assign the value of customerName if it exists
+            }
             completed.add(
               CompletedWidget(
                 time: time,
@@ -98,6 +137,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 phone: documentSnapshot['customerPhone'],
                 address: documentSnapshot['customerAddress'],
                 date: date,
+                customerName: customerName,
+                subCategory: subCategory,
               ),
             );
           } else if (documentSnapshot['status'] == 'r') {
@@ -106,6 +147,24 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             String time =
                 '${dateTime.hour}:${dateTime.minute}:${dateTime.second}';
             String date = '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+            String customerName =
+                "not-mentioned"; // Default value if customerName field doesn't exist in the document
+
+            var data =
+                documentSnapshot.data(); // Retrieve data from the document
+            if (data != null &&
+                data is Map<String, dynamic> &&
+                data.containsKey('customerName')) {
+              customerName = data[
+                  'customerName']; // Assign the value of customerName if it exists
+            }
+            String subCategory = "not-mentioned";
+            if (data != null &&
+                data is Map<String, dynamic> &&
+                data.containsKey('subCategory')) {
+              subCategory = data[
+                  'subCategory']; // Assign the value of customerName if it exists
+            }
             rejected.add(
               DeclineWidget(
                 time: time,
@@ -116,6 +175,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 phone: documentSnapshot['customerPhone'],
                 address: documentSnapshot['customerAddress'],
                 date: date,
+                customerName: customerName,
+                subCategory: subCategory,
               ),
             );
           }
@@ -534,6 +595,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       phone: completed[index].phone,
                       address: completed[index].address,
                       date: completed[index].date,
+                      customerName: completed[index].customerName,
+                      subCategory: completed[index].subCategory,
                     );
                   } else if (screenId == 'p' || screenId == 's') {
                     return PendingWidget(
@@ -545,6 +608,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       phone: pending[index].phone,
                       address: pending[index].address,
                       date: pending[index].date,
+                      customerName: pending[index].customerName,
+                      subCategory: pending[index].subCategory,
                     );
                   } else {
                     return DeclineWidget(
@@ -554,6 +619,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       phone: rejected[index].phone,
                       address: rejected[index].address,
                       date: rejected[index].date,
+                      customerName: rejected[index].customerName,
+                      subCategory: rejected[index].subCategory,
                     );
                   }
                 },

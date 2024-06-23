@@ -7,9 +7,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/id_verification_screen/verfication_complete_screen.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/id_verification_screen/verfication_complete_screen.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
 import 'package:image/image.dart' as img;
 import 'dart:typed_data';
 
@@ -135,18 +135,18 @@ class _IdVerificationScreenState extends State<IdVerificationScreen> {
       final image = await ImagePicker().pickImage(source: source);
       if (image == null) return;
 
-      final path = File(image.path);
+      File path = File(image.path);
 
-      // Rotate image if necessary
-      final originalFile = File(image.path);
-      Uint8List imageBytes = await originalFile.readAsBytes();
+      // Read image bytes
+      Uint8List imageBytes = await path.readAsBytes();
       img.Image? decodedImage = img.decodeImage(imageBytes);
-      if (decodedImage != null) {
-        if (decodedImage.width > decodedImage.height) {
-          decodedImage = img.copyRotate(decodedImage, angle: 90);
-        }
-        File(path.path)..writeAsBytesSync(img.encodeJpg(decodedImage));
-      }
+
+      // Compress the image
+      final compressedBytes = Uint8List.fromList(img.encodeJpg(decodedImage!,
+          quality: 80)); // Adjust quality as needed (0 - 100)
+
+      // Write compressed image bytes to the file
+      await path.writeAsBytes(compressedBytes);
 
       setState(() {
         if (s == 'front') {
@@ -223,25 +223,25 @@ class _IdVerificationScreenState extends State<IdVerificationScreen> {
                       SizedBox(height: 8.v),
                       Padding(
                         padding: EdgeInsets.only(
-                          left: 34.h,
-                          right: 40.h,
+                          left: 10.h,
+                          right: 30.h,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Text(
-                              "ID Front",
+                              "Adhaar Front",
                               style: theme.textTheme.bodySmall,
                             ),
                             SizedBox(
-                              width: mediaQueryData.size.width * 0.2,
+                              width: mediaQueryData.size.width * 0.05,
                             ),
                             Text(
-                              "ID Back",
+                              "Adhaar Back",
                               style: theme.textTheme.bodySmall,
                             ),
                             SizedBox(
-                              width: mediaQueryData.size.width * 0.2,
+                              width: mediaQueryData.size.width * 0.1,
                             ),
                             Text(
                               "Selfie",

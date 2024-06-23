@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
+import 'package:partnersapp/core/app_export.dart';
 
 // ignore: must_be_immutable
 class DeclineWidget extends StatelessWidget {
-  const DeclineWidget(
-      {super.key,
-      required this.phone,
-      required this.timing,
-      required this.time,
-      required this.serviceName,
-      required this.address,
-      required this.date});
+  const DeclineWidget({
+    super.key,
+    required this.phone,
+    required this.timing,
+    required this.time,
+    required this.serviceName,
+    required this.address,
+    required this.date,
+    required this.customerName,
+    required this.subCategory,
+  });
   final String phone;
   final String address;
   final String serviceName;
   final String time;
   final String timing;
   final String date;
+  final String customerName;
+  final String subCategory;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 20.v, horizontal: 15.h),
+      padding: EdgeInsets.symmetric(vertical: 20.v, horizontal: 2.h),
       decoration: AppDecoration.gradientOnErrorToBlueGray.copyWith(
         borderRadius: BorderRadiusStyle.roundedBorder10,
       ),
@@ -42,12 +47,12 @@ class DeclineWidget extends StatelessWidget {
                   ),
                   Padding(
                     padding: EdgeInsets.only(
-                      left: 13.h,
+                      left: 4.h,
                       top: 2.v,
                       bottom: 4.v,
                     ),
                     child: Text(
-                      phone,
+                      "+91**********",
                       style: TextStyle(
                         color: appTheme.blueGray700,
                         fontSize: 13.740318298339844.fSize,
@@ -57,6 +62,26 @@ class DeclineWidget extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+              SizedBox(height: 8.v),
+              Text(
+                "Name : ${customerName}",
+                style: TextStyle(
+                  color: appTheme.blueGray700,
+                  fontSize: 13.740318298339844.fSize,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 12.v),
+              Text(
+                "Issue : $subCategory",
+                style: TextStyle(
+                  color: appTheme.blueGray700,
+                  fontSize: 13.740318298339844.fSize,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               SizedBox(height: 12.v),
               Row(

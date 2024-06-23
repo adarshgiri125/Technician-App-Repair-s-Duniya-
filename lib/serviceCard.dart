@@ -4,11 +4,15 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/my_bookings/my_bookings_screen.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/my_bookings/my_bookings_screen.dart';
+import 'package:partnersapp/presentation/technician_home_screen/notifications_display.dart';
+import 'package:partnersapp/presentation/technician_home_screen/technician_home_screen.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
 
+bool _bookingChangedSuccessfully = false;
 
 class NotificationCard extends StatelessWidget {
   final int remainingSeconds;
@@ -20,6 +24,8 @@ class NotificationCard extends StatelessWidget {
   final String phoneNumber;
   final DateTime date;
   final String user;
+  final String customerName;
+  final String subCategory;
 
   const NotificationCard({
     Key? key,
@@ -32,6 +38,8 @@ class NotificationCard extends StatelessWidget {
     required this.phoneNumber,
     required this.date,
     required this.user,
+    required this.customerName,
+    required this.subCategory,
   }) : super(key: key);
 
   @override
@@ -57,9 +65,14 @@ class NotificationCard extends StatelessWidget {
               style: CustomTextStyles.bodyMediumRed500,
             ),
             SizedBox(height: 15.v),
+            const Text(
+              'User Phone Number: "+91*********"',
+              style: TextStyle(color: Colors.black),
+            ),
+            SizedBox(height: 8.v),
             Text(
-              'User Phone Number: $phoneNumber',
-              style: const TextStyle(color: Colors.black),
+              'User Name: $customerName',
+              style: TextStyle(color: Colors.black),
             ),
             SizedBox(height: 8.v),
             Text(
@@ -92,8 +105,27 @@ class NotificationCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: CustomElevatedButton(
-                    onPressed: () {
-                      _acceptBooking(context);
+                    onPressed: () async {
+                      await _changeBooking(context);
+                      if (_bookingChangedSuccessfully) {
+                        Fluttertoast.showToast(
+                          msg: "Oops! Booking already accepted by another User",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.CENTER,
+                          timeInSecForIosWeb: 2,
+                          backgroundColor: Colors.red,
+                          textColor: Colors.white,
+                          fontSize: 16.0,
+                        );
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TechnicianHomeScreen(),
+                          ),
+                        );
+                      } else {
+                        _acceptBooking(context);
+                      }
                     },
                     text: 'Accept',
                     height: 49.v,
@@ -128,12 +160,6 @@ class NotificationCard extends StatelessWidget {
     // Navigator.of(context).pop();
     await _setStatus('p');
     await _sendingNotification(context);
-    await _changeBooking();
-    // Navigator.pushAndRemoveUntil(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => MyBookingsScreen(id: 'p')),
-    //   (route) => false,
-    // );
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -143,13 +169,8 @@ class NotificationCard extends StatelessWidget {
   }
 
   void _rejectBooking(BuildContext context) async {
-    // Navigator.of(context).pop();
     await _setStatus('r');
-    // Navigator.pushAndRemoveUntil(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => MyBookingsScreen(id: 'r')),
-    //   (route) => false,
-    // );
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -167,7 +188,15 @@ class NotificationCard extends StatelessWidget {
     String customerTokenId = "";
     String phoneNumber = "";
     String serviceName = "";
+    String technicianName = "";
 
+    await firestore
+        .collection('technicians')
+        .doc('user!.uid')
+        .get()
+        .then((snapshot) {
+      technicianName = snapshot.data()!['technicianName'];
+    });
     await firestore
         .collection('technicians')
         .doc(user!.uid)
@@ -187,6 +216,7 @@ class NotificationCard extends StatelessWidget {
       phoneNumber,
       user,
       serviceName,
+      technicianName,
     );
   }
 
@@ -196,6 +226,7 @@ class NotificationCard extends StatelessWidget {
     String phoneNumber,
     User user,
     String serviceName,
+    String technicianName,
   ) async {
     log("Building notification format...");
     log(customerTokenId);
@@ -210,7 +241,8 @@ class NotificationCard extends StatelessWidget {
     };
 
     Map bodyNotification = {
-      "body": "Your $serviceName request has been successfully accepted.",
+      "body":
+          "Your $serviceName request has been successfully accepted by $technicianName",
       "title": "Technician Assigned",
     };
 
@@ -248,7 +280,7 @@ class NotificationCard extends StatelessWidget {
     }
   }
 
-  Future<void> _changeBooking() async {
+  Future<void> _changeBooking(BuildContext context) async {
     final customerUser = this.user;
     final docname = this.docname;
     final user = FirebaseAuth.instance.currentUser;
@@ -276,15 +308,27 @@ class NotificationCard extends StatelessWidget {
       DocumentSnapshot snapshot = await documentReference.get();
 
       if (snapshot.exists) {
-        String? newPhoneNumber = user?.phoneNumber;
-        bool accept = true;
+        // Check if job acceptance is already true
+        bool jobAcceptance =
+            (snapshot.data() as Map<String, dynamic>?)?['jobAcceptance'] ??
+                false;
 
-        await documentReference.update({
-          'userPhoneNumber': newPhoneNumber,
-          'jobAcceptance': accept,
-        });
+        // If job acceptance is already true, return
+        if (jobAcceptance) {
+          _bookingChangedSuccessfully = true;
+        } else {
+          String? newPhoneNumber = user?.phoneNumber;
+          bool accept = true;
 
-        log('Booking details updated successfully.');
+          await documentReference.update({
+            'userPhoneNumber': newPhoneNumber,
+            'jobAcceptance': accept,
+          });
+
+          log('Booking details updated successfully.');
+        }
+
+        // If job acceptance is not true, proceed with updating booking details
       } else {
         log('Document does not exist.');
       }
@@ -310,16 +354,3 @@ class NotificationCard extends StatelessWidget {
     }
   }
 }
-
-
-// NotificationCard(
-//   remainingSeconds: 60,
-//   docname: 'your_doc_name',
-//   serviceName: 'Your Service',
-//   time: '10:00 AM',
-//   urgent: false,
-//   address: '123 Main St',
-//   phoneNumber: '123-456-7890',
-//   date: DateTime.now(),
-//   user: 'customer_user_id',
-// )

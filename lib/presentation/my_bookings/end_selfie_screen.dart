@@ -6,9 +6,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/my_bookings/my_bookings_screen.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/my_bookings/my_bookings_screen.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
 
 class EndSelfieScreen extends StatefulWidget {
   const EndSelfieScreen({super.key, required this.docName});
@@ -71,14 +71,21 @@ class _EndSelfieScreenState extends State<EndSelfieScreen> {
           .doc(_user!.uid)
           .collection('serviceList')
           .doc(widget.docName)
-          .update({'status': 'c'});
+          .update({'status': 'c', 'workStatus': 'Complete Working'});
 
       await _firestore
-          .collection('customers')
-          .doc(userID)
-          .collection('serviceList')
-          .doc(serviceID)
-          .update({'workStatus': 'Complete Working'});
+          .collection('technicians')
+          .doc(_user!.uid)
+          .update({'workDone': FieldValue.increment(1)});
+
+      if (userID.isNotEmpty && serviceID.isNotEmpty) {
+        await _firestore
+            .collection('customers')
+            .doc(userID)
+            .collection('serviceDetails')
+            .doc(serviceID)
+            .update({'workStatus': 'Complete Working'});
+      }
 
       Navigator.pushAndRemoveUntil(
           context,

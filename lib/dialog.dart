@@ -7,9 +7,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/my_bookings/my_bookings_screen.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/my_bookings/my_bookings_screen.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
 
 class NotificationDialog extends StatefulWidget {
   final int remainingSeconds;

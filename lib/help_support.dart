@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/technician_home_screen/technician_home_screen.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/technician_home_screen/technician_home_screen.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});

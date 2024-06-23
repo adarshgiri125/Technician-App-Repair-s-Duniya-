@@ -46,6 +46,25 @@
     },
     {
       "client_info": {
+        "mobilesdk_app_id": "1:897433509401:android:9352463eabb5b00d4e5488",
+        "android_client_info": {
+          "package_name": "com.repairsduniya.partnersapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_AHTL-2qeXXF0S0EAoG_iCw1fs52jiQc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:897433509401:android:72497bb396143d8d4e5488",
         "android_client_info": {
           "package_name": "com.repairsduniya.technician_app"

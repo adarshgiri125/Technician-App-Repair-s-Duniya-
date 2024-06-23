@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/service_selection_screen/service_selection_screen.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/service_selection_screen/service_selection_screen.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
 
 class VerificationCompleteScreen extends StatelessWidget {
   const VerificationCompleteScreen({super.key});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/theme/custom_text_style.dart';
-import 'package:technician_app/widgets/base_button.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/theme/custom_text_style.dart';
+import 'package:partnersapp/widgets/base_button.dart';
 
 class CustomOutlinedButton extends BaseButton {
   CustomOutlinedButton({

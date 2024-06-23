@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/widgets/base_button.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/widgets/base_button.dart';
 
 class CustomElevatedButton extends BaseButton {
   CustomElevatedButton({
@@ -16,7 +16,7 @@ class CustomElevatedButton extends BaseButton {
     bool? isDisabled,
     double? height,
     double? width,
-    required String text,
+    required String text, CircularProgressIndicator? child,
   }) : super(
           text: text,
           onPressed: onPressed,

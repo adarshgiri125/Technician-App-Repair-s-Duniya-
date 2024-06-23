@@ -2,9 +2,10 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/presentation/technician_home_screen/technician_home_screen.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/presentation/technician_home_screen/technician_home_screen.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class ServiceSelectionScreen extends StatefulWidget {
   const ServiceSelectionScreen({Key? key}) : super(key: key);
@@ -42,7 +43,7 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
     'Geyser',
     'Air Cooler',
     'MicroWave',
-    'Painter',
+    // 'Painter',
     'Construction/Renovation',
     'Washing Machine',
   ];
@@ -153,7 +154,18 @@ class _ServiceSelectionScreenState extends State<ServiceSelectionScreen> {
                       : const ButtonStyle(),
                   text: "Confirm",
                   onPressed: () {
-                    uploadServices();
+                    if (servicesList.isNotEmpty) {
+                      uploadServices();
+                    } else {
+                      Fluttertoast.showToast(
+                        msg: "No services to upload!",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        backgroundColor: Colors.red,
+                        textColor: Colors.white,
+                        fontSize: 16.0,
+                      );
+                    }
                   },
                 ),
                 SizedBox(height: 32.v),

@@ -10,16 +10,16 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:technician_app/core/app_export.dart';
-import 'package:technician_app/notification.dart';
-import 'package:technician_app/presentation/my_bookings/my_bookings_screen.dart';
-import 'package:technician_app/presentation/technician_home_screen/notifications_display.dart';
-import 'package:technician_app/presentation/technician_home_screen/profile_screen.dart';
-import 'package:technician_app/widgets/app_bar/appbar_title.dart';
-import 'package:technician_app/widgets/app_bar/appbar_trailing_image.dart';
-import 'package:technician_app/widgets/completed_widget.dart';
-import 'package:technician_app/widgets/custom_elevated_button.dart';
-import 'package:technician_app/widgets/half_page.dart';
+import 'package:partnersapp/core/app_export.dart';
+import 'package:partnersapp/notification.dart';
+import 'package:partnersapp/presentation/my_bookings/my_bookings_screen.dart';
+import 'package:partnersapp/presentation/technician_home_screen/notifications_display.dart';
+import 'package:partnersapp/presentation/technician_home_screen/profile_screen.dart';
+import 'package:partnersapp/widgets/app_bar/appbar_title.dart';
+import 'package:partnersapp/widgets/app_bar/appbar_trailing_image.dart';
+import 'package:partnersapp/widgets/completed_widget.dart';
+import 'package:partnersapp/widgets/custom_elevated_button.dart';
+import 'package:partnersapp/widgets/half_page.dart';
 
 class TechnicianHomeScreen extends StatefulWidget {
   const TechnicianHomeScreen({super.key});
@@ -52,6 +52,7 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
         saveLogin();
       });
     });
+    _getName();
     _checkLocationPermission();
     _getCurrentLocation();
     setupDeviceToken();
@@ -412,7 +413,7 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
                           child: Padding(
                             padding: EdgeInsets.only(left: 10.h),
                             child: Text(
-                              "Recent Bookings",
+                              "Hi, Welcome!",
                               style: theme.textTheme.headlineSmall,
                             ),
                           ),
@@ -581,13 +582,95 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
               ),
             );
           },
-          height: 100.v,
+          height: 70.v,
           width: double.infinity,
-          text: "My Bookings",
+          text: "All Bookings",
           buttonStyle: CustomButtonStyles.none,
           decoration: CustomButtonStyles.gradientPrimaryToGrayTL13Decoration,
         ),
       ],
     );
+  }
+
+  Future<void> _getName() async {
+    // Get the current user
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      // Get a reference to the document for the user
+      DocumentReference userDocRef =
+          _firestore.collection('technicians').doc(user.uid);
+
+      // Check if the "name" field exists in the document
+      DocumentSnapshot userDocSnapshot = await userDocRef.get();
+
+      if (userDocSnapshot.exists) {
+        Map<String, dynamic>? userData =
+            userDocSnapshot.data() as Map<String, dynamic>?;
+
+        if (userData != null && userData.containsKey('technicianName')) {
+          // "name" field exists, proceed with your existing logic
+          // You can call the function that shows the confirmation dialog here
+          // For example:
+          return;
+        } else {
+          // "name" field does not exist, show dialog to enter the name
+          showDialog(
+            context: context,
+            builder: (context) {
+              String newName = ""; // Variable to store the entered name
+              return AlertDialog(
+                title: Text("Enter Your Name"),
+                content: TextField(
+                  onChanged: (value) {
+                    newName = value; // Update newName when the user types
+                  },
+                  decoration: InputDecoration(
+                    hintText: "Enter Your Name",
+                  ),
+                ),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Add the entered name to Firestore
+                      userDocRef.set({
+                        'technicianName': newName,
+                      }, SetOptions(merge: true)).then((value) {
+                        // Close the dialog after adding the name
+                        Navigator.pop(context);
+                        // Proceed with your existing logic
+                      }).catchError((error) {
+                        // Handle error if adding name fails
+                        print("Failed to add name: $error");
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors
+                          .black, // Set button background color to dark black
+                      textStyle: const TextStyle(
+                          color: Colors.black, // Set text color to dark black
+                          fontSize: 15.0,
+                          fontWeight: FontWeight.bold // Set font size
+
+                          ),
+                      padding: EdgeInsets.symmetric(
+                          vertical: 16.0, horizontal: 24.0), // Set padding
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(10.0), // Set button shape
+                      ),
+                    ),
+                    child: Text(
+                      "Submit",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      }
+    }
   }
 }
