@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,8 +10,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:partnersapp/firebase_options.dart';
 import 'package:partnersapp/notification.dart';
+import 'package:partnersapp/notification1.dart';
 import 'package:partnersapp/presentation/login_screen/login_screen.dart';
 import 'package:partnersapp/presentation/technician_home_screen/notifications_display.dart';
+import 'package:partnersapp/presentation/technician_home_screen/subscription_checker.dart';
 import 'package:partnersapp/presentation/technician_home_screen/technician_home_screen.dart';
 import 'package:partnersapp/theme/theme_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +24,12 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("Handling a background message");
-  createNotification(message);
+  if (message != null) {
+    String notificationTitle = message.notification?.title ?? "No title";
+    String notificationBody = message.notification?.body ?? "No message body";
+    LocalNotificationService.showBasicNotification(
+        notificationTitle, notificationBody);
+  }
 }
 
 var globalMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -29,6 +39,10 @@ void main() async {
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
+  await Future.wait([
+    LocalNotificationService.init(),
+  ]);
+
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
     alert: true,
     badge: true,
@@ -39,24 +53,39 @@ void main() async {
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     if (message != null) {
-      createNotification(message);
+      String notificationTitle = message.notification?.title ?? "No title";
+      String notificationBody = message.notification?.body ?? "No message body";
+      LocalNotificationService.showBasicNotification(
+          notificationTitle, notificationBody);
     }
   });
   FirebaseMessaging.instance
       .getInitialMessage()
       .then((RemoteMessage? message) async {
     if (message != null) {
-      createNotification(message);
+      String notificationTitle = message.notification?.title ?? "No title";
+      String notificationBody = message.notification?.body ?? "No message body";
+      LocalNotificationService.showBasicNotification(
+          notificationTitle, notificationBody);
     }
   });
 
   FirebaseMessaging.onBackgroundMessage((message) async {
     if (message != null) {
-      createNotification(message);
+      String notificationTitle = message.notification?.title ?? "No title";
+      String notificationBody = message.notification?.body ?? "No message body";
+      LocalNotificationService.showBasicNotification(
+          notificationTitle, notificationBody);
     }
   });
   FirebaseMessaging.onMessageOpenedApp.listen((message) async {
     // createNotification(message);
+    if (message != null) {
+      String notificationTitle = message.notification?.title ?? "No title";
+      String notificationBody = message.notification?.body ?? "No message body";
+      LocalNotificationService.showBasicNotification(
+          notificationTitle, notificationBody);
+    }
     Navigator.push(
       globalMessengerKey.currentContext!,
       MaterialPageRoute(
@@ -83,7 +112,7 @@ class MyApp extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.done) {
             // Return the appropriate screen based on the login status
             return snapshot.data == true
-                ? const TechnicianHomeScreen()
+                ? SubscriptionChecker()
                 : const LoginScreen();
           } else {
             // Return a loading indicator or splash screen while checking login status
@@ -145,56 +174,5 @@ class MyApp extends StatelessWidget {
       // Return false indicating that user existence couldn't be verified
       return false;
     }
-  }
-}
-
-createNotification(RemoteMessage message) async {
-  AndroidNotificationChannel androidSettings = AndroidNotificationChannel(
-    'default_channel_id',
-    'High Importance Notifications',
-    importance: Importance.high,
-    playSound: true,
-    sound: RawResourceAndroidNotificationSound(
-        'notification.mp3'.split('.').first),
-  );
-
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(androidSettings);
-
-  RemoteNotification? notification = message.notification;
-  AndroidNotification? android = message.notification?.android;
-
-  if (android == null) {
-    print("something error in android missing");
-  }
-  print("check1 : $notification");
-
-  if (notification != null && android != null) {
-    flutterLocalNotificationsPlugin.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          androidSettings.id,
-          androidSettings.name,
-          importance: Importance.max,
-          color: Colors.blue,
-          playSound: true,
-          priority: Priority.max,
-          audioAttributesUsage: AudioAttributesUsage
-              .notification, // Set audioAttributesUsage to notification
-          enableLights: true,
-          enableVibration: true,
-          icon: '@mipmap/ic_launcher',
-          timeoutAfter: 40000,
-
-          // other properties...
-        ),
-      ),
-    );
-    print("check2 : $notification");
   }
 }

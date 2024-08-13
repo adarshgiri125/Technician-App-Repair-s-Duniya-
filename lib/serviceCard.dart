@@ -15,7 +15,7 @@ import 'package:partnersapp/widgets/custom_elevated_button.dart';
 bool _bookingChangedSuccessfully = false;
 
 class NotificationCard extends StatelessWidget {
-  final int remainingSeconds;
+  // final int remainingSeconds;
   final String docname;
   final String serviceName;
   final String time;
@@ -29,7 +29,7 @@ class NotificationCard extends StatelessWidget {
 
   const NotificationCard({
     Key? key,
-    required this.remainingSeconds,
+    // required this.remainingSeconds,
     required this.docname,
     required this.serviceName,
     required this.time,
@@ -60,16 +60,20 @@ class NotificationCard extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20.v),
-            Text(
-              'Time remaining: Less than $remainingSeconds Minutes',
-              style: CustomTextStyles.bodyMediumRed500,
-            ),
-            SizedBox(height: 15.v),
+            // Text(
+            //   'Time remaining: Less than $remainingSeconds Minutes',
+            //   style: CustomTextStyles.bodyMediumRed500,
+            // ),
+            // SizedBox(height: 15.v),
             const Text(
               'User Phone Number: "+91*********"',
               style: TextStyle(color: Colors.black),
             ),
             SizedBox(height: 8.v),
+            // const Text(
+            //   'User Phone Number: $docname',
+            //   style: TextStyle(color: Colors.black),
+            // ),
             Text(
               'User Name: $customerName',
               style: TextStyle(color: Colors.black),
@@ -157,15 +161,105 @@ class NotificationCard extends StatelessWidget {
   }
 
   void _acceptBooking(BuildContext context) async {
-    // Navigator.of(context).pop();
+    log("Starting _acceptBooking");
+
+    // Set the status to 'p' (presumably 'pending' or 'accepted')
+    log("Setting status to 'p'");
     await _setStatus('p');
+    log("Status set to 'p'");
+
+    // Record acceptance time and response time
+    await _recordAcceptanceTime();
+    log("Acceptance time recorded");
+
+    // Send notification
+    log("Sending notification");
     await _sendingNotification(context);
+    log("Notification sent");
+
+    // Navigate to MyBookingsScreen
+    log("Navigating to MyBookingsScreen");
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => MyBookingsScreen(id: 'p'),
       ),
     );
+
+    log("Navigation completed");
+  }
+
+  Future<void> _recordAcceptanceTime() async {
+    final firestore = FirebaseFirestore.instance;
+    final user = FirebaseAuth.instance.currentUser;
+    final docName = this.docname;
+
+    // Fetch the booking document
+    final serviceListSnapshot = await firestore
+        .collection('technicians')
+        .doc(user!.uid)
+        .collection('serviceList')
+        .doc(docName)
+        .get();
+
+    final requestTime =
+        (serviceListSnapshot.data() as Map<String, dynamic>)['timestamp']
+            .toDate();
+    final acceptanceTime = DateTime.now();
+
+    // Calculate response time in minutes
+    final responseTimeInMinutes =
+        acceptanceTime.difference(requestTime).inMinutes;
+
+    // Update job with acceptance time and response time
+    await firestore
+        .collection('technicians')
+        .doc(user.uid)
+        .collection('serviceList')
+        .doc(docName)
+        .update({
+      'acceptanceTime': FieldValue.serverTimestamp(),
+      'responseTime': responseTimeInMinutes,
+      'jobAcceptance': true,
+    });
+
+    // Update technician's profile with average response time
+    await _updateAverageResponseTime(user.uid);
+  }
+
+  Future<void> _updateAverageResponseTime(String technicianUserID) async {
+    final firestore = FirebaseFirestore.instance;
+
+    final serviceListSnapshot = await firestore
+        .collection('technicians')
+        .doc(technicianUserID)
+        .collection('serviceList')
+        .where('jobAcceptance', isEqualTo: true)
+        .get();
+
+    final acceptedJobs = serviceListSnapshot.docs;
+
+    if (acceptedJobs.isNotEmpty) {
+      final totalResponseTime = acceptedJobs.fold<int>(
+        0,
+        (sum, doc) => sum + (doc.data()['responseTime'] as int),
+      );
+
+      final averageResponseTime = totalResponseTime / acceptedJobs.length;
+
+      // Update technician profile with average response time
+      await firestore.collection('technicians').doc(technicianUserID).update({
+        'averageResponseTime': averageResponseTime,
+        'totalAcceptedJobs': acceptedJobs
+            .length, // Optional: Track the total number of accepted jobs
+      });
+    } else {
+      // If no jobs are accepted, set averageResponseTime to 0 or some default value
+      await firestore.collection('technicians').doc(technicianUserID).update({
+        'averageResponseTime': 0,
+        'totalAcceptedJobs': 0,
+      });
+    }
   }
 
   void _rejectBooking(BuildContext context) async {
@@ -183,6 +277,7 @@ class NotificationCard extends StatelessWidget {
     final firestore = FirebaseFirestore.instance;
     final user = FirebaseAuth.instance.currentUser;
     final docName = this.docname;
+    log("Starting _sendingNotification for doc '$docName'");
 
     String customerId = "";
     String customerTokenId = "";
@@ -190,34 +285,43 @@ class NotificationCard extends StatelessWidget {
     String serviceName = "";
     String technicianName = "";
 
-    await firestore
-        .collection('technicians')
-        .doc('user!.uid')
-        .get()
-        .then((snapshot) {
-      technicianName = snapshot.data()!['technicianName'];
-    });
-    await firestore
-        .collection('technicians')
-        .doc(user!.uid)
-        .collection('serviceList')
-        .doc(docName)
-        .get()
-        .then((snapshot) {
-      customerId = snapshot.data()!['customerId'];
-      customerTokenId = snapshot.data()!['customerTokenId'];
-      phoneNumber = snapshot.data()!['customerPhone'];
-      serviceName = snapshot.data()!['serviceName'];
-    });
+    try {
+      // Fetch technician name
+      log("Fetching technician name");
+      final technicianSnapshot =
+          await firestore.collection('technicians').doc(user!.uid).get();
+      technicianName = technicianSnapshot.data()!['technicianName'];
+      log("Technician name: $technicianName");
 
-    await _notificationFormat(
-      customerTokenId,
-      customerId,
-      phoneNumber,
-      user,
-      serviceName,
-      technicianName,
-    );
+      // Fetch customer details
+      log("Fetching customer details for service list doc '$docName'");
+      final serviceListSnapshot = await firestore
+          .collection('technicians')
+          .doc(user.uid)
+          .collection('serviceList')
+          .doc(docName)
+          .get();
+
+      customerId = serviceListSnapshot.data()!['customerId'];
+      customerTokenId = serviceListSnapshot.data()!['customerTokenId'];
+      phoneNumber = serviceListSnapshot.data()!['customerPhone'];
+      serviceName = serviceListSnapshot.data()!['serviceName'];
+
+      log("Customer details: customerId: $customerId, customerTokenId: $customerTokenId, phoneNumber: $phoneNumber, serviceName: $serviceName");
+
+      // Send notification
+      await _notificationFormat(
+        customerTokenId,
+        customerId,
+        phoneNumber,
+        user,
+        serviceName,
+        technicianName,
+      );
+      log("Notification format sent");
+    } catch (e) {
+      log("Error sending notification: $e");
+    }
   }
 
   Future<void> _notificationFormat(
@@ -288,6 +392,7 @@ class NotificationCard extends StatelessWidget {
 
     String serviceID = "";
 
+    // Fetch the service ID
     await firestore
         .collection('technicians')
         .doc(user!.uid)
@@ -297,6 +402,7 @@ class NotificationCard extends StatelessWidget {
         .then((snapshot) {
       serviceID = snapshot.data()!['serviceId'];
     });
+    print("customer: $customerUser, serviceID: $serviceID");
 
     try {
       DocumentReference documentReference = FirebaseFirestore.instance
@@ -313,22 +419,27 @@ class NotificationCard extends StatelessWidget {
             (snapshot.data() as Map<String, dynamic>?)?['jobAcceptance'] ??
                 false;
 
-        // If job acceptance is already true, return
+        print("Initial jobAcceptance: $jobAcceptance");
+
+        // If job acceptance is already true, set the flag and return
         if (jobAcceptance) {
           _bookingChangedSuccessfully = true;
+          print("Booking has already been accepted.");
+          return;
         } else {
+          // If job acceptance is not true, proceed with updating booking details
           String? newPhoneNumber = user?.phoneNumber;
-          bool accept = true;
+
+          print("Updating booking with new phone number: $newPhoneNumber");
 
           await documentReference.update({
             'userPhoneNumber': newPhoneNumber,
-            'jobAcceptance': accept,
+            'jobAcceptance': true,
           });
 
           log('Booking details updated successfully.');
+          _bookingChangedSuccessfully = false;
         }
-
-        // If job acceptance is not true, proceed with updating booking details
       } else {
         log('Document does not exist.');
       }
@@ -343,12 +454,24 @@ class NotificationCard extends StatelessWidget {
     final docname = this.docname;
 
     try {
-      await firestore
+      if(status == 'r'){
+         await firestore
           .collection('technicians')
           .doc(user!.uid)
           .collection('serviceList')
           .doc(docname)
-          .update({'status': status});
+          .update({'status': status,'jobAcceptance': FieldValue.delete() });
+      }
+      else{
+        await firestore
+          .collection('technicians')
+          .doc(user!.uid)
+          .collection('serviceList')
+          .doc(docname)
+          .update({'status': status, 'jobAcceptance': true});
+
+      }
+      
     } catch (e) {
       log(e.toString());
     }

@@ -575,32 +575,32 @@ class _ConfirmLocationScreenState extends State<ConfirmLocationScreen> {
           SizedBox(height: 20.v),
           CustomElevatedButton(
             onPressed: () {
-              if (codes.contains(_postalCode) == true) {
+              // if (codes.contains(_postalCode) == true) {
                 uploadLocation();
-              } else {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    content: Text('Invalid pincode....',
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontSize: MediaQuery.of(context).size.width * 0.1)),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          'OK',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontSize: mediaQueryData.size.width * 0.05),
-                        ),
-                      )
-                    ],
-                  ),
-                );
-              }
+              // } else {
+              //   showDialog(
+              //     context: context,
+              //     builder: (context) => AlertDialog(
+              //       content: Text('Invalid pincode....',
+              //           style: TextStyle(
+              //               color: Colors.black,
+              //               fontSize: MediaQuery.of(context).size.width * 0.1)),
+              //       actions: [
+              //         TextButton(
+              //           onPressed: () {
+              //             Navigator.pop(context);
+              //           },
+              //           child: Text(
+              //             'OK',
+              //             style: TextStyle(
+              //                 color: Colors.black,
+              //                 fontSize: mediaQueryData.size.width * 0.05),
+              //           ),
+              //         )
+              //       ],
+              //     ),
+              //   );
+              // }
             },
             text: "Yes, that’s my location",
             buttonStyle: CustomButtonStyles.none,

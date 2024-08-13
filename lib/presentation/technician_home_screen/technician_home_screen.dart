@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:partnersapp/presentation/technician_home_screen/addOffer.dart';
+import 'package:partnersapp/presentation/technician_home_screen/visitOffer.dart';
 import 'package:permission_handler/permission_handler.dart' as handler;
 import 'package:location/location.dart' as loc;
 import 'package:geolocator/geolocator.dart';
@@ -37,6 +39,7 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
   LatLng? _currentPosition;
   bool showHalfPage = false;
   List<CompletedWidget> recentBookings = [];
+  bool isWorking = false;
 
   @override
   void initState() {
@@ -51,12 +54,39 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
         _user = user;
         saveLogin();
       });
+      if (_user != null) {
+        _fetchWorkingStatus();
+      }
     });
     _getName();
     _checkLocationPermission();
     _getCurrentLocation();
     setupDeviceToken();
     initializePermission();
+  }
+
+  Future<void> _fetchWorkingStatus() async {
+    try {
+      var document =
+          await _firestore.collection('technicians').doc(_user!.uid).get();
+      setState(() {
+        isWorking = document.data()?['workingStatus'] ?? false;
+      });
+      log('Fetched working status: $isWorking');
+    } catch (e) {
+      log('Error fetching working status: $e');
+    }
+  }
+
+  Future<void> _updateWorkingStatus(bool status) async {
+    try {
+      await _firestore.collection('technicians').doc(_user!.uid).set({
+        'workingStatus': status,
+      }, SetOptions(merge: true));
+      log('Updated working status to: $status');
+    } catch (e) {
+      log('Failed to update working status: $e');
+    }
   }
 
   Future<void> _checkLocationPermission() async {
@@ -180,132 +210,6 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
     prefs.setString('userToken', token!);
   }
 
-  // Future<void> getCurrentLocation() async {
-  //   bool serviceEnabled;
-  //   loc.PermissionStatus permission;
-
-  //   try {
-  //     // Check if location services are enabled
-  //     serviceEnabled = await _location.serviceEnabled();
-  //     if (!serviceEnabled) {
-  //       serviceEnabled = await _location.requestService();
-  //     }
-
-  //     if (!serviceEnabled) {
-  //       throw Exception('Location Services not Enabled');
-  //     }
-
-  //     // Request permission to access location
-  //     permission = await _location.hasPermission();
-  //     if (permission == loc.PermissionStatus.denied) {
-  //       permission = await _location.requestPermission();
-
-  //       if (permission == loc.PermissionStatus.denied) {
-  //         // ignore: use_build_context_synchronously
-  //         showDialog(
-  //           context: context,
-  //           builder: (BuildContext context) {
-  //             return AlertDialog(
-  //               content: Text(
-  //                 "This app will utilize location data only while the app is in use to enhance and optimize the user experience.",
-  //                 style: TextStyle(color: Colors.black, fontSize: 20.adaptSize),
-  //               ),
-  //               actions: [
-  //                 TextButton(
-  //                   onPressed: () {
-  //                     Navigator.of(context).pop();
-  //                     setState(() {
-  //                       permission = loc.PermissionStatus.deniedForever;
-  //                     });
-  //                   },
-  //                   child: Text(
-  //                     'Deny',
-  //                     style: TextStyle(
-  //                       color: Colors.black,
-  //                       fontSize: 15.adaptSize,
-  //                     ),
-  //                   ),
-  //                 ),
-  //                 TextButton(
-  //                   onPressed: () async {
-  //                     Navigator.of(context).pop();
-  //                     await handler.openAppSettings();
-  //                   },
-  //                   child: Text(
-  //                     'Allow',
-  //                     style: TextStyle(
-  //                       color: Colors.black,
-  //                       fontSize: 15.adaptSize,
-  //                     ),
-  //                   ),
-  //                 ),
-  //               ],
-  //             );
-  //           },
-  //         );
-
-  //         throw Exception('Location permissions are denied');
-  //       }
-  //     }
-
-  //     if (permission == loc.PermissionStatus.deniedForever) {
-  //       throw Exception(
-  //           'Location permissions are denied forever, cannot request permission');
-  //     }
-
-  //     getUserLocation();
-  //   } catch (e) {
-  //     // Handle the exception here
-  //     print('Exception in getCurrentLocation: $e');
-  //   }
-  // }
-
-  // Future<void> getUserLocation() async {
-  //   Position position = await Geolocator.getCurrentPosition(
-  //       desiredAccuracy: LocationAccuracy.high);
-  //   setState(() {
-  //     _currentPosition = LatLng(position.latitude, position.longitude);
-  //   });
-
-  //   bool documentExists = await _firestore
-  //       .collection('technicians')
-  //       .doc(_user!.uid)
-  //       .collection('location')
-  //       .doc('currentLocation')
-  //       .get()
-  //       .then((DocumentSnapshot document) => document.exists);
-
-  //   if (documentExists == true) {
-  //     try {
-  //       await _firestore
-  //           .collection('technicians')
-  //           .doc(_user!.uid)
-  //           .collection('location')
-  //           .doc('currentLocation')
-  //           .update({
-  //         'latitude': _currentPosition!.latitude,
-  //         'longitude': _currentPosition!.longitude
-  //       });
-  //     } catch (e) {
-  //       log(e.toString());
-  //     }
-  //   } else {
-  //     try {
-  //       await _firestore
-  //           .collection('technicians')
-  //           .doc(_user!.uid)
-  //           .collection('location')
-  //           .doc('currentLocation')
-  //           .set({
-  //         'latitude': _currentPosition!.latitude,
-  //         'longitude': _currentPosition!.longitude
-  //       }, SetOptions(merge: true));
-  //     } catch (e) {
-  //       log(e.toString());
-  //     }
-  //   }
-  // }
-
   Future<void> initializePermission() async {
     bool isDenied = await Permission.notification.isDenied;
     if (isDenied) {
@@ -418,6 +322,8 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
                             ),
                           ),
                         ),
+                        SizedBox(height: 20.v),
+                        _buildWorkingStatusToggle(context),
                         SizedBox(height: 26.v),
                         _buildUserProfileList(context),
                       ],
@@ -427,6 +333,68 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWorkingStatusToggle(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 20.0),
+      child: Container(
+        width: double.infinity, // Make the container fill the width
+        padding:
+            EdgeInsets.symmetric(horizontal: 16.0), // Add horizontal padding
+        decoration: BoxDecoration(
+          color: Colors.grey[200], // Background color of the container
+          borderRadius: BorderRadius.circular(8.0), // Rounded corners
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.5), // Shadow color
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: Offset(0, 3), // Offset of the shadow
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment:
+              MainAxisAlignment.spaceBetween, // Space between elements
+          children: [
+            Text(
+              'Working: ',
+              style: TextStyle(
+                fontSize: 16.0, // Increase the text size
+                fontWeight: FontWeight.bold, // Make the text bold
+              ),
+            ),
+            Row(
+              children: [
+                Text(
+                  isWorking ? 'Online' : 'Offline',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    color: isWorking ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(width: 8.0), // Space between text and switch
+                Switch(
+                  value: isWorking,
+                  onChanged: (value) {
+                    setState(() {
+                      isWorking = value;
+                    });
+                    _updateWorkingStatus(value);
+                  },
+                  activeColor: Colors.green, // Color when switch is on
+                  inactiveThumbColor: Colors.red, // Color when switch is off
+                  inactiveTrackColor: Colors.red
+                      .withOpacity(0.5), // Track color when switch is off
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -570,9 +538,72 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
   Widget _buildUserProfileList(BuildContext context) {
     return Column(
       children: [
-        SizedBox(
-          height: 200.v,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddOfferScreen(userId: _user!.uid),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white, // Background color
+                  minimumSize: Size(double.infinity, 70.0), // Button size
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(12.0), // Rounded corners
+                  ),
+                  textStyle: TextStyle(color: Colors.white),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add, color: Colors.black),
+                    SizedBox(width: 8.0),
+                    Text("Add Offer", style: TextStyle(color: Colors.black)),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: 16.0), // Space between buttons
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          VisitChargesScreen(userId: _user!.uid),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white, // Background color
+                  minimumSize: Size(double.infinity, 70.0), // Button size
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(12.0), // Rounded corners
+                  ),
+                  textStyle: TextStyle(color: Colors.black),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.monetization_on, color: Colors.black),
+                    SizedBox(width: 8.0),
+                    Text("Visit Charge", style: TextStyle(color: Colors.black))
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
+        SizedBox(height: 30.0), // Space between rows
         CustomElevatedButton(
           onPressed: () {
             Navigator.push(
@@ -582,7 +613,7 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
               ),
             );
           },
-          height: 70.v,
+          height: 70.0,
           width: double.infinity,
           text: "All Bookings",
           buttonStyle: CustomButtonStyles.none,

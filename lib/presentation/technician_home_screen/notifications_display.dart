@@ -27,7 +27,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _user = user;
       });
     });
-    removeExpiredNotifications();
+    // removeExpiredNotifications();
   }
 
   @override
@@ -111,7 +111,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
                 if (status == 'n') {
                   return NotificationCard(
-                    remainingSeconds: 5,
+                    // remainingSeconds: 5,
                     docname: documents[index].id,
                     serviceName: serviceName,
                     time: time,
@@ -144,7 +144,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           .collection('technicians')
           .doc(_user!.uid)
           .collection('serviceList')
-          .where('timestamp', isGreaterThan: fiveMinutesAgo)
+          // .where('timestamp', isGreaterThan: fiveMinutesAgo)
           .orderBy('timestamp', descending: true)
           .get();
 
@@ -159,24 +159,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 // Function to remove expired notifications
   Future<void> removeExpiredNotifications() async {
     try {
-      DateTime currentTime = DateTime.now();
-      DateTime fiveMinutesAgo = currentTime.subtract(Duration(minutes: 5));
+      // DateTime currentTime = DateTime.now();
+      // DateTime fiveMinutesAgo = currentTime.subtract(Duration(minutes: 5));
 
-      // Delete documents where 'status' is 'n' and 'timestamp' is older than 5 minutes
-      QuerySnapshot<Map<String, dynamic>> expiredNotifications =
-          await _firestore
-              .collection('technicians')
-              .doc(_user!.uid)
-              .collection('serviceList')
-              .where('status', isEqualTo: 'n')
-              .where('timestamp', isLessThan: fiveMinutesAgo)
-              .get();
+      // // Delete documents where 'status' is 'n' and 'timestamp' is older than 5 minutes
+      // QuerySnapshot<Map<String, dynamic>> expiredNotifications =
+      //     await _firestore
+      //         .collection('technicians')
+      //         .doc(_user!.uid)
+      //         .collection('serviceList')
+      //         .where('status', isEqualTo: 'n')
+      //         .where('timestamp', isLessThan: fiveMinutesAgo)
+      //         .get();
 
-      // Iterate over expired notifications and delete them
-      for (DocumentSnapshot<Map<String, dynamic>> document
-          in expiredNotifications.docs) {
-        await document.reference.delete();
-      }
+      // // Iterate over expired notifications and delete them
+      // for (DocumentSnapshot<Map<String, dynamic>> document
+      //     in expiredNotifications.docs) {
+      //   await document.reference.delete();
+      // }
 
       // Fetch documents from technician's serviceList collection
       QuerySnapshot<Map<String, dynamic>> technicianServiceListSnapshot =

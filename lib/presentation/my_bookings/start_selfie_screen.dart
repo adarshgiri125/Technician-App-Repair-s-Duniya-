@@ -120,7 +120,7 @@ class _StartSelfieScreenState extends State<StartSelfieScreen> {
           .doc(widget.docName)
           .update({
         'status': 's',
-        'jobAcceptance': true,
+        // 'jobAcceptance': true,
         'workStatus': 'Started Working'
       });
 
